@@ -65,12 +65,13 @@ quit:
     ret
 
 ;------------------------------------------
-; String addition(String num1, num2)
+; int addition(String num1, num2)
 ; Adds 5 digit numbers
 addition:
-    mov     esi, 4       ;pointing to the rightmost digit
-    mov     ecx, 5       ;loop counter - currently used for # of digits
-    clc                  ;clears the carry flag (removing any garbage values)
+    push    ecx
+    mov     esi, 4              ;points to rightmost digit
+    mov     ecx, 5              ;loop counter - currently used for # of digits
+    clc                         ;clears the carry flag (removing any garbage values)
 add_loop:
     mov 	al, [num1 + esi];offset esi moves digit rightward
     adc 	al, [num2 + esi];adds two operands together + the value of the carry flag
@@ -82,14 +83,18 @@ add_loop:
     mov	[res + esi], al   ;move result to res
     dec	esi               ;move one digit left
     loop	add_loop        ;if ecx != 0, go back to addition
+    pop     ecx
     ret
+
 ;------------------------------------------
-; String subtraction(String num1, num2)
+; int subtraction(String num1, num2)
 ; Subtracts 5 digit numbers
 subtraction:
-    mov     esi, 4;points to rightmost digit
-    mov     ecx, 5;loop counter - currently used for # of digits
-    clc           ;clears the carry flag (removing any garbage values)
+    push    ecx
+
+    mov     esi, 4              ;points to rightmost digit
+    mov     ecx, 5              ;loop counter - currently used for # of digits
+    clc                         ;clears the carry flag (removing any garbage values)
 sub_loop:
     mov 	al, [num1 + esi];offset esi moves digit rightward
     sub 	al, [num2 + esi];subtracts two operands together + the value of the carry flag
@@ -100,5 +105,49 @@ sub_loop:
 
     mov [res + esi], al   ;move result to res
     dec esi               ;move one digit left
-    loop sub_loop         ;if ecx != 0, go back to subtraction
+    loop    sub_loop      ;if ecx != 0, go back to addition
+
+    jc      negative      ;jump to negative if the borrow flag was used at the leftmost digit
+sub_finish:
+    pop     ecx
+    ret
+
+
+negative:
+    mov     [res], byte '-'     ;add '-' to res
+    call    swap                ;swap num1 and num2 for subtraction
+    call    subtraction         ;subtract again with the swapped values
+    jmp     sub_finish
+
+;------------------------------------------
+; String swap(String num1, num2)
+; Swaps two strings
+swap:
+
+    ;move num1 to temp
+    mov     ecx, 5          ;loop 5 times (ecx)
+    mov     esi, num1       ;source string (num1)
+    mov     edi, temp       ;destination string (temp)
+    call    write_loop      ;call loop that replaces each character
+
+    ;move num2 to num1
+    mov     ecx, 5          ;loop 5 times (ecx)
+    mov     esi, num2       ;source string (num2)
+    mov     edi, num1       ;destination string (num1)
+    call    write_loop      ;call loop that replaces each character
+
+    ;move temp(num1) to num2
+    mov     ecx, 5          ;loop 5 times (ecx)
+    mov     esi, temp       ;source string (temp)
+    mov     edi, num2       ;destination string (num2)
+    call    write_loop      ;call loop that replaces each character
+
+    ret
+
+    write_loop:
+    mov     al, [esi]   ;move source char to al register
+    mov     [edi], al   ;move char to destination
+    inc     esi         ;point to next char in esi
+    inc     edi         ;point to next char in edi
+    loop    write_loop  ;back to write_loop (unless ecx == 0)
     ret
